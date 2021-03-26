@@ -1,15 +1,14 @@
 ﻿using System;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Threading;
 
-namespace GZipTest
+namespace  GZipTestLibrary
 {
     /// <summary>
     /// Создаёт поток чтения/преобразования блока данных
     /// </summary>
-    internal class BlockThread : ABlockThread
+    public class BlockThread : ABlockThread
     {
         #region private
         /// <summary>

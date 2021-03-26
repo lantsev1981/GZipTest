@@ -2,7 +2,7 @@
 using System.IO;
 using System.IO.Compression;
 
-namespace GZipTest
+namespace  GZipTestLibrary
 {
     /// <summary>
     /// Описывает базовый набор методов и свойств которые должна реализовывать GZip фабрика потоковой обработки данных
@@ -30,6 +30,9 @@ namespace GZipTest
         /// (при необходимости можно вывести в параметры создания фабрики)
         /// </summary>
         public readonly int MaxBlockSize = 1024 * 1024;
+
+
+        //public EventHandler<ProgressMessage> ProgressMessage;
     }
 
     /// <summary>
@@ -99,4 +102,9 @@ namespace GZipTest
         /// </summary>
         public abstract void Start();
     }
+
+    /*public class ProgressMessage : EventArgs
+    {
+        string MessageProgress { get; set; }
+    }*/
 }

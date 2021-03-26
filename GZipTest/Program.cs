@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GZipTestLibrary;
+using System;
 using System.IO;
 using System.IO.Compression;
 
@@ -21,7 +22,7 @@ namespace GZipTest
                 || string.IsNullOrWhiteSpace(args[2]))
             {
                 Console.WriteLine("Неверно заданы параметры вызова! Укажите параметры в формате: compress/decompress [имя исходного файла] [имя результирующего файла]");
-                Console.ReadKey();
+                Console.ReadLine();
                 return;
             }
 
@@ -35,15 +36,17 @@ namespace GZipTest
 
             if (sourceFile != null && sourceFile.Exists && targetFile != null)
             {
-                //Запускаем фабрику процесса обработки данных
-                new GZipThreadFactory<BlockThread>(args[0] == "compress" ? CompressionMode.Compress : CompressionMode.Decompress, sourceFile, targetFile);
+                //Создаём фабрику и запускаем процесс обработки данных
+                var gZipTF = new GZipThreadFactory<BlockThread>(args[0] == "compress" ? CompressionMode.Compress : CompressionMode.Decompress, sourceFile, targetFile);
+                gZipTF.Start();
             }
             else
             {
                 Console.WriteLine($"Не удалось получить доступ к исходному файлу");
+                Console.ReadLine();
             }
-            
-            Console.ReadLine();
+
+            //Console.ReadLine();
         }
 
         private static FileInfo GetFileInfo(string filename)

@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Threading;
 
-namespace GZipTest
+namespace GZipTestLibrary
 {
 
     /// <summary>
@@ -49,6 +50,11 @@ namespace GZipTest
         private Dictionary<long, ABlockThread> _CompleatedBTDict = new Dictionary<long, ABlockThread>();
 
         /// <summary>
+        /// Базовая информация об исходном файле
+        /// </summary>
+        public FileInfo _TargetFile { get; protected set; }
+
+        /// <summary>
         /// Выходной поток записи данных
         /// Создаётся в конструкторе и закрывается при завершении всех операций записи
         /// </summary>
@@ -58,27 +64,36 @@ namespace GZipTest
         /// Счётчик времени выполнения всех операций
         /// </summary>
         private Stopwatch _Stopwatch = new Stopwatch();
+
+        /// <summary>
+        /// Блокирут выход в основной поток до завершения всех опираций
+        /// </summary>
+        private static AutoResetEvent waitHandler = new AutoResetEvent(false);
         #endregion
 
         /// <summary>
-        /// Конструктор фабрики многопоточного архивирования/разархивирования
-        /// Формирует очередь чтения/записи данных в многопоточном режиме
-        /// Запускает процесс обработки данных
+        /// Осуществляет многопоточную архивировацию/разархивировацию данных
         /// </summary>
         /// <param name="mode">Режим работы архивация/разархивация</param>
         /// <param name="sourceFile">Базовая информация об исходном файле</param>
         /// <param name="targetFile">Базовая информация о выходном файле</param>
         public GZipThreadFactory(CompressionMode mode, FileInfo sourceFile, FileInfo targetFile)
         {
-            //Инициализация фабрики
-            _Stopwatch.Start();
             Mode = mode;
             SourceFile = sourceFile;
-            _TargetFileStream = targetFile.Create();
+            _TargetFile = targetFile;
+        }
 
+        /// <summary>
+        /// Запускает процесс обработки данных
+        /// </summary>
+        public void Start()
+        {
+            _Stopwatch.Start();
+            _TargetFileStream = _TargetFile.Create();
             //Определение общего количества операций чтения/преобразования в зависимости от максимально размера блока
             if (Mode == CompressionMode.Compress)
-                _BlockCount = sourceFile.Length / MaxBlockSize + 1;
+                _BlockCount = SourceFile.Length / MaxBlockSize + 1;
             else
                 ReadZipBlock();
 
@@ -89,6 +104,8 @@ namespace GZipTest
                 for (int i = 0; i < Math.Min(Environment.ProcessorCount - 1, _BlockCount); i++)
                     StartNewBlockThread();
             }
+
+            waitHandler.WaitOne();
         }
 
         /// <summary>
@@ -202,6 +219,7 @@ namespace GZipTest
                         _Stopwatch.Stop();
                         Console.WriteLine($"Время выполнения: {_Stopwatch.Elapsed}");
                         Console.WriteLine("Для выхода из программы нажмите Enter");
+                        waitHandler.Set();
                     }
                 }
             }
@@ -215,14 +233,14 @@ namespace GZipTest
         {
             try
             {
-                    Console.WriteLine($"Запись [{pt.Id + 1}/{_BlockCount}]...");
+                Console.WriteLine($"Запись [{pt.Id + 1}/{_BlockCount}]...");
 
-                    if (Mode == CompressionMode.Compress)
-                        BitConverter.GetBytes(pt.Data.Length).CopyTo(pt.Data, 4);
+                if (Mode == CompressionMode.Compress)
+                    BitConverter.GetBytes(pt.Data.Length).CopyTo(pt.Data, 4);
 
-                    _TargetFileStream.Write(pt.Data, 0, pt.Data.Length);
+                _TargetFileStream.Write(pt.Data, 0, pt.Data.Length);
 
-                    Console.WriteLine($"Запись [{pt.Id + 1}/{_BlockCount}] - OK");
+                Console.WriteLine($"Запись [{pt.Id + 1}/{_BlockCount}] - OK");
             }
             catch (Exception exp)
             {
