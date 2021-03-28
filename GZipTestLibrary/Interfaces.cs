@@ -89,7 +89,6 @@ namespace  GZipTestLibrary
             Id = id;
             _Factory = factory;
             _Position = position;
-            Data = null;
         }
 
         /// <summary>

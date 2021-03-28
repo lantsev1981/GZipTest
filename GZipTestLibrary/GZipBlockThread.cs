@@ -3,7 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Threading;
 
-namespace  GZipTestLibrary
+namespace GZipTestLibrary
 {
     /// <summary>
     /// Создаёт поток чтения/преобразования блока данных
@@ -99,16 +99,22 @@ namespace  GZipTestLibrary
         /// </summary>
         private void ThreadAction()
         {
-            Console.WriteLine($"{_Thread.Name}...");
+            if (!_Factory.ErrorStatus)
+            {
+                Console.WriteLine($"{_Thread.Name}...");
 
-            if (_Factory.Mode == CompressionMode.Compress)
-                Compress();
-            else Decompress();
+                if (_Factory.Mode == CompressionMode.Compress)
+                    Compress();
+                else Decompress();
+            }
 
-            Console.WriteLine($"{_Thread.Name} - ОК");
+            if (!_Factory.ErrorStatus)
+            {
+                Console.WriteLine($"{_Thread.Name} - ОК");
 
-            //Передаём обработку события завершения операции в основной поток приложения
-            Compleated?.BeginInvoke(this, EventArgs.Empty, null, null);
+                //Передаём обработку события завершения операции в основной поток приложения
+                Compleated?.BeginInvoke(this, EventArgs.Empty, null, null);
+            }
         }
 
         /// <summary>
