@@ -141,7 +141,7 @@ namespace  GZipTestLibrary
             }
             catch (Exception exp)
             {
-                Console.WriteLine($"Ошибка сжатия данных: блок \"{_Thread}\" ({exp.Message})");
+                Console.WriteLine($"Ошибка сжатия данных: блок \"{Id}\" ({exp.Message})");
                 ErrorStatus = true;
             }
         }
@@ -179,7 +179,7 @@ namespace  GZipTestLibrary
             }
             catch (Exception exp)
             {
-                Console.WriteLine($"Ошибка разархивации данных: блок \"{_Thread}\" ({exp.Message})");
+                Console.WriteLine($"Ошибка разархивации данных: блок \"{Id}\" ({exp.Message})");
                 ErrorStatus = true;
             }
         }

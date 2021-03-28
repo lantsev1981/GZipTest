@@ -30,37 +30,22 @@ namespace GZipTest
             Console.WriteLine("Для продолжения нажмите Enter, для отмены операции нажмите Ctrl+C");
             Console.ReadLine();
 
-            //Получаем информацию об входном и выходном файле
-            var sourceFile = GetFileInfo(args[1]);
-            var targetFile = GetFileInfo(args[2]);
+            //Создаём фабрику и запускаем процесс обработки данных
+            var gZipTF = new GZipThreadFactory<BlockThread>();
+            gZipTF.Start(args[0] == "compress" ? CompressionMode.Compress : CompressionMode.Decompress, args[1], args[2]);
 
-            if (sourceFile != null && sourceFile.Exists && targetFile != null)
+            if (gZipTF.ErrorStatus)
             {
-                //Создаём фабрику и запускаем процесс обработки данных
-                var gZipTF = new GZipThreadFactory<BlockThread>(args[0] == "compress" ? CompressionMode.Compress : CompressionMode.Decompress, sourceFile, targetFile);
-                gZipTF.Start();
+                Console.WriteLine("Операция завершена с ошибкой");
+                Console.ReadLine();
+                Environment.Exit(1);
             }
             else
             {
-                Console.WriteLine($"Не удалось получить доступ к исходному файлу");
+                Console.WriteLine("Операция успешно завершена");
                 Console.ReadLine();
+                Environment.Exit(0);
             }
-
-            //Console.ReadLine();
-        }
-
-        private static FileInfo GetFileInfo(string filename)
-        {
-            try
-            {
-                return new FileInfo(filename);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"Не удалось получить доступ к файлу: {e.Message}");
-            }
-
-            return null;
         }
     }
 }

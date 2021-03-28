@@ -72,40 +72,43 @@ namespace GZipTestLibrary
         #endregion
 
         /// <summary>
-        /// Осуществляет многопоточную архивировацию/разархивировацию данных
-        /// </summary>
-        /// <param name="mode">Режим работы архивация/разархивация</param>
-        /// <param name="sourceFile">Базовая информация об исходном файле</param>
-        /// <param name="targetFile">Базовая информация о выходном файле</param>
-        public GZipThreadFactory(CompressionMode mode, FileInfo sourceFile, FileInfo targetFile)
-        {
-            Mode = mode;
-            SourceFile = sourceFile;
-            _TargetFile = targetFile;
-        }
-
-        /// <summary>
         /// Запускает процесс обработки данных
         /// </summary>
-        public void Start()
+        /// <param name="mode">Режим работы архивация/разархивация</param>
+        /// <param name="sourceFile">путь к исходному файлу</param>
+        /// <param name="targetFile">путь к выходному файлу</param>
+        public void Start(CompressionMode mode, string sourceFileName, string targetFileName)
         {
-            _Stopwatch.Start();
-            _TargetFileStream = _TargetFile.Create();
-            //Определение общего количества операций чтения/преобразования в зависимости от максимально размера блока
-            if (Mode == CompressionMode.Compress)
-                _BlockCount = SourceFile.Length / MaxBlockSize + 1;
-            else
-                ReadZipBlock();
-
-            if (!ErrorStatus)
+            try
             {
-                //Запуск первых операций поблочного чтения/преобразования данных.
-                //Максимальное количество паралельных потоков определяется исходя из количества логических ядер процессора
-                for (int i = 0; i < Math.Min(Environment.ProcessorCount - 1, _BlockCount); i++)
-                    StartNewBlockThread();
-            }
+                Mode = mode;
+                SourceFile = new FileInfo(sourceFileName);
+                _TargetFile = new FileInfo(targetFileName);
 
-            waitHandler.WaitOne();
+                _Stopwatch.Start();
+                _TargetFileStream = _TargetFile.Create();
+
+                //Определение общего количества операций чтения/преобразования в зависимости от максимально размера блока
+                if (Mode == CompressionMode.Compress)
+                    _BlockCount = SourceFile.Length / MaxBlockSize + 1;
+                else
+                    ReadZipBlock();
+
+                if (!ErrorStatus)
+                {
+                    //Запуск первых операций поблочного чтения/преобразования данных.
+                    //Максимальное количество паралельных потоков определяется исходя из количества логических ядер процессора
+                    for (int i = 0; i < Math.Min(Environment.ProcessorCount - 1, _BlockCount); i++)
+                        StartNewBlockThread();
+
+                    waitHandler.WaitOne();
+                }
+            }
+            catch (Exception exp)
+            {
+                Console.WriteLine($"При запуске операции произошла ошибка: {exp.Message}");
+                ErrorStatus = true;
+            }
         }
 
         /// <summary>
@@ -148,8 +151,6 @@ namespace GZipTestLibrary
                 Console.WriteLine($"Ошибка предобработки файла: ({exp.Message})");
                 Console.WriteLine($"Возможно файл имеет неверный формат");
                 ErrorStatus = true;
-                Console.WriteLine("Для выхода из программы нажмите Enter");
-                Environment.ExitCode = 1;
             }
         }
 
@@ -177,9 +178,7 @@ namespace GZipTestLibrary
                     ErrorStatus = true;
                 if (ErrorStatus)
                 {
-                    if (Environment.ExitCode == 0)
-                        Console.WriteLine("Для выхода из программы нажмите Enter");
-                    Environment.ExitCode = 1;
+                    waitHandler.Set();
                     return;
                 }
 
@@ -199,7 +198,7 @@ namespace GZipTestLibrary
                 if (_BlockToWrite == sender.Id)
                 {
                     //Запись в файл продолжаем пока в списке готовых блоков не найдём следующий в очереди записи блок
-                    while (_CompleatedBTDict.TryGetValue(_BlockToWrite, out ABlockThread bt))
+                    while (!ErrorStatus && _CompleatedBTDict.TryGetValue(_BlockToWrite, out ABlockThread bt))
                     {
                         Write(bt);
 
@@ -212,13 +211,12 @@ namespace GZipTestLibrary
                     }
 
                     //Обработка условия завершения списка всех задач
-                    if (_BlockToWrite == _BlockCount)
+                    if (ErrorStatus || _BlockToWrite == _BlockCount)
                     {
                         _TargetFileStream.Close();
                         _TargetFileStream.Dispose();
                         _Stopwatch.Stop();
                         Console.WriteLine($"Время выполнения: {_Stopwatch.Elapsed}");
-                        Console.WriteLine("Для выхода из программы нажмите Enter");
                         waitHandler.Set();
                     }
                 }
