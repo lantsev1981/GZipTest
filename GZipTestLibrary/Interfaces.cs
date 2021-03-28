@@ -32,6 +32,11 @@ namespace  GZipTestLibrary
         public readonly int MaxBlockSize = 1024 * 1024;
 
 
+        /// <summary>
+        /// Запускает поток обработки данных
+        /// </summary>
+        public abstract void Start(CompressionMode mode, string sourceFileName, string targetFileName);
+
         //public EventHandler<ProgressMessage> ProgressMessage;
     }
 
@@ -69,7 +74,7 @@ namespace  GZipTestLibrary
         /// <summary>
         /// Событие завершение операции
         /// </summary>
-        public EventHandler Compleated;
+        internal EventHandler Compleated;
 
         /// <summary>
         /// Передача параметров блока потоковой обработки данных

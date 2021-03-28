@@ -31,7 +31,7 @@ namespace GZipTest
             Console.ReadLine();
 
             //Создаём фабрику и запускаем процесс обработки данных
-            var gZipTF = new GZipThreadFactory<BlockThread>();
+            AGZipThreadFactory gZipTF = new GZipThreadFactory<BlockThread>();
             gZipTF.Start(args[0] == "compress" ? CompressionMode.Compress : CompressionMode.Decompress, args[1], args[2]);
 
             if (gZipTF.ErrorStatus)

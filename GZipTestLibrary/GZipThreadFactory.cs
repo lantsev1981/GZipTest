@@ -77,7 +77,7 @@ namespace GZipTestLibrary
         /// <param name="mode">Режим работы архивация/разархивация</param>
         /// <param name="sourceFile">путь к исходному файлу</param>
         /// <param name="targetFile">путь к выходному файлу</param>
-        public void Start(CompressionMode mode, string sourceFileName, string targetFileName)
+        public override void Start(CompressionMode mode, string sourceFileName, string targetFileName)
         {
             try
             {
