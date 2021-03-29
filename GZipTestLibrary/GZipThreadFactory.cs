@@ -144,6 +144,8 @@ namespace GZipTestLibrary
                         _BlockCount++;
                     }
                 }
+                if (_ZipBlokPosDict.Count == 0)
+                    throw new Exception("Не удалось вычислить количество блоков сжатого файла");
                 Console.WriteLine($"Вычисление количества блоков сжатого файла - ОК");
             }
             catch (Exception exp)
