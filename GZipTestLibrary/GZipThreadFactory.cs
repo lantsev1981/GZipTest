@@ -12,6 +12,7 @@ namespace GZipTestLibrary
     /// Фабрика создания потоков для поблочного считывания и архивации/разархивации файлов
     /// </summary>
     public class GZipThreadFactory<T> : AGZipThreadFactory where T : ABlockThread, new()
+
     {
         #region private
         /// <summary>
@@ -68,7 +69,7 @@ namespace GZipTestLibrary
         /// <summary>
         /// Блокирут выход в основной поток до завершения всех опираций
         /// </summary>
-        private static AutoResetEvent waitHandler = new AutoResetEvent(false);
+        private AutoResetEvent waitHandler = new AutoResetEvent(false);
         #endregion
 
         /// <summary>
